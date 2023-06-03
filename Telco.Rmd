@@ -1,0 +1,108 @@
+```{r}
+# Load necessary packages
+library(tidyverse)
+```
+```{r}
+# Read the dataset
+telco <- read.csv("telco_churn.csv")
+```
+```{r}
+# Print the first six rows of the telco dataset
+head(telco)
+```
+```{r}
+# Display summary statistics for the telco dataset, including the mean, median, standard deviation, and range for each variable.
+summary(telco)
+```
+```{r}
+# Print the structure of the telco dataset, including the names of the variables, the number of rows and columns, the data type of each variable, and the first few values of each variable.
+str(telco)
+```
+```{r}
+# Create a table of the Churn variable in the telco dataset, showing the number of observations in each category.
+table(telco$Churn)
+```
+```{r}
+# Handle missing values
+telco <- telco %>% na.omit()  # Remove rows with missing values
+```
+```{r}
+# Convert categorical variables
+telco$Churn <- as.factor(telco$Churn)
+```
+```{r}
+# Perform feature engineering
+telco <- telco %>% mutate(TotalCharges = ifelse(TotalCharges == " ", 0, as.numeric(TotalCharges)))
+```
+```{r}
+library(caret) #load the caret library
+# Split the dataset
+set.seed(123)  # For reproducibility
+train_index <- caret::createDataPartition(telco$Churn, p = 0.8, list = FALSE)
+train_data <- telco[train_index, ]
+test_data <- telco[-train_index, ]
+```
+```{r}
+# Select an algorithm
+library(randomForest)
+```
+```{r}
+# Train the model
+model <- randomForest(Churn ~ ., data = train_data)
+```
+```{r}
+# Evaluate the model
+predictions <- predict(model, newdata = test_data)
+confusionMatrix(predictions, test_data$Churn)
+```
+```{r}
+# Analyze the predictions and interpret the results
+varImpPlot(model)
+```
+```{r}
+# Summarize and visualize the results
+library(ggplot2)
+ggplot(telco, aes(x = Churn, fill = InternetService)) +
+  geom_bar() +
+  labs(title = "Churn by Internet Service", x = "Churn", y = "Count")
+```
+```{r}
+# Scatter plot of Monthly Charges vs. Total Charges
+ggplot(data = telco, aes(x = MonthlyCharges, y = TotalCharges)) +
+  geom_point() +
+  labs(title = "Monthly Charges vs. Total Charges", x = "Monthly Charges", y = "Total Charges")
+```
+```{r}
+# Histogram of Monthly Charges
+ggplot(data = telco, aes(x = MonthlyCharges)) +
+  geom_histogram(binwidth = 10, fill = "steelblue", color = "black") +
+  labs(title = "Distribution of Monthly Charges", x = "Monthly Charges", y = "Count")
+```
+```{r}
+# Bar plot of Churn Rate by Contract Type
+ggplot(data = telco, aes(x = Contract, fill = Churn)) +
+  geom_bar(position = "fill") +
+  labs(title = "Churn Rate by Contract Type", x = "Contract", y = "Proportion") +
+  scale_fill_manual(values = c("steelblue", "orange"), labels = c("No Churn", "Churn"))
+```
+```{r}
+# Box plot of Monthly Charges by Churn
+ggplot(data = telco, aes(x = Churn, y = MonthlyCharges, fill = Churn)) +
+  geom_boxplot() +
+  labs(title = "Monthly Charges by Churn", x = "Churn", y = "Monthly Charges") +
+  scale_fill_manual(values = c("steelblue", "orange"), labels = c("No Churn", "Churn"))
+```
+```{r}
+# Line plot of Average Monthly Charges Over Tenure
+library(dplyr)
+
+telco_summary <- telco %>%
+  group_by(tenure) %>%
+  summarise(avg_charges = mean(MonthlyCharges))
+
+ggplot(data = telco_summary, aes(x = tenure, y = avg_charges)) +
+  geom_line() +
+  labs(title = "Average Monthly Charges Over Tenure", x = "Tenure", y = "Average Monthly Charges")
+
+```
+
